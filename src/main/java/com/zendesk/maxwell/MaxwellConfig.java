@@ -359,13 +359,13 @@ public class MaxwellConfig extends AbstractConfig {
 		this.rocketmqNameServerAddress = fetchOption("rocketmq.nameServerAddress", options, properties, null);
 		if ( rocketmqNameServerAddress != null )
 			this.rocketmqProperties.setProperty("nameServerAddress", rocketmqNameServerAddress);
-		this.rocketmqProducerGroup = fetchOption("rocketmq.producerGroup", options, properties, "maxwellBinlogProducer");
+		this.rocketmqProducerGroup = fetchOption("rocketmq.producerGroup", options, properties, "PID_maxwell_binlog");
 		if ( rocketmqProducerGroup != null )
 			this.rocketmqProperties.setProperty("producerGroup", rocketmqProducerGroup);
-		this.rocketmqTopic = fetchOption("rocketmq.topic", options, properties, "maxwellMysqlBinlog");
+		this.rocketmqTopic = fetchOption("rocketmq.topic", options, properties, "maxwell_mysql_binlog");
 		if ( rocketmqTopic != null )
 			this.rocketmqProperties.setProperty("topic", rocketmqTopic);
-		this.rocketmqDdlTopic = fetchOption("rocketmq.ddlTopic", options, properties, "maxwellMysqlDdlBinlog");
+		this.rocketmqDdlTopic = fetchOption("rocketmq.ddlTopic", options, properties, "maxwell_mysql_binlog_ddl");
 		if ( rocketmqDdlTopic != null )
 			this.rocketmqProperties.setProperty("ddlTopic", rocketmqDdlTopic);
 
