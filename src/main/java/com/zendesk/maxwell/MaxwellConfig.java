@@ -52,6 +52,12 @@ public class MaxwellConfig extends AbstractConfig {
 	public String bootstrapperType;
 	public int bufferedProducerSize;
 
+	public final Properties rocketmqProperties;
+	public String rocketmqNameServerAddress;
+	public String rocketmqProducerGroup;
+	public String rocketmqTopic;
+	public String rocketmqDdlTopic;
+
 	public String producerPartitionKey;
 	public String producerPartitionColumns;
 	public String producerPartitionFallback;
@@ -88,6 +94,7 @@ public class MaxwellConfig extends AbstractConfig {
 
 	public MaxwellConfig() { // argv is only null in tests
 		this.kafkaProperties = new Properties();
+		this.rocketmqProperties = new Properties();
 		this.replayMode = false;
 		this.replicationMysql = new MaxwellMysqlConfig();
 		this.maxwellMysql = new MaxwellMysqlConfig();
@@ -205,6 +212,13 @@ public class MaxwellConfig extends AbstractConfig {
 		parser.accepts( "metrics_datadog_port", "the port to publish metrics to when metrics_datadog_type = udp" ).withOptionalArg();
 
 		parser.accepts( "__separator_9" );
+
+		parser.accepts( "rocketmq.nameServerAddress", "rocketmq name server address" ).withOptionalArg();
+		parser.accepts( "rocketmq.producerGroup", "rocketmq producerGroup" ).withOptionalArg();
+		parser.accepts( "rocketmq.topic", "rocketmq topic" ).withOptionalArg();
+		parser.accepts( "rocketmq.ddlTopic", "rocketmq topic for ddl binlog" ).withOptionalArg();
+
+		parser.accepts( "__separator_10" );
 
 		parser.accepts( "help", "display help").forHelp();
 
@@ -342,6 +356,19 @@ public class MaxwellConfig extends AbstractConfig {
 		this.producerPartitionColumns = fetchOption("producer_partition_columns", options, properties, null);
 		this.producerPartitionFallback = fetchOption("producer_partition_by_fallback", options, properties, null);
 
+		this.rocketmqNameServerAddress = fetchOption("rocketmq.nameServerAddress", options, properties, null);
+		if ( rocketmqNameServerAddress != null )
+			this.rocketmqProperties.setProperty("nameServerAddress", rocketmqNameServerAddress);
+		this.rocketmqProducerGroup = fetchOption("rocketmq.producerGroup", options, properties, "maxwellBinlogProducer");
+		if ( rocketmqProducerGroup != null )
+			this.rocketmqProperties.setProperty("producerGroup", rocketmqProducerGroup);
+		this.rocketmqTopic = fetchOption("rocketmq.topic", options, properties, "maxwellMysqlBinlog");
+		if ( rocketmqTopic != null )
+			this.rocketmqProperties.setProperty("topic", rocketmqTopic);
+		this.rocketmqDdlTopic = fetchOption("rocketmq.ddlTopic", options, properties, "maxwellMysqlDdlBinlog");
+		if ( rocketmqDdlTopic != null )
+			this.rocketmqProperties.setProperty("ddlTopic", rocketmqDdlTopic);
+
 		if(this.kafkaPartitionKey != null && !this.kafkaPartitionKey.equals("database")) {
 			LOGGER.warn("kafka_partition_by is deprecated, please use producer_partition_by");
 			this.producerPartitionKey = this.kafkaPartitionKey;
@@ -439,7 +466,11 @@ public class MaxwellConfig extends AbstractConfig {
 	}
 
 	public void validate() {
-		if ( this.producerType.equals("kafka") ) {
+		if (this.producerType.equals("rocketmq")) {
+			if ( !this.rocketmqProperties.containsKey("nameServerAddress") ) {
+				usageForOptions("You must specify rocketmq.nameServerAddress for the rocketmq producer!", "rocketmq");
+			}
+		} else if ( this.producerType.equals("kafka") ) {
 			if ( !this.kafkaProperties.containsKey("bootstrap.servers") ) {
 				usageForOptions("You must specify kafka.bootstrap.servers for the kafka producer!", "kafka");
 			}
@@ -548,6 +579,10 @@ public class MaxwellConfig extends AbstractConfig {
 
 	public Properties getKafkaProperties() {
 		return this.kafkaProperties;
+	}
+
+	public Properties getRocketmqProperties() {
+		return this.rocketmqProperties;
 	}
 
 	public static Pattern compileStringToPattern(String name) throws MaxwellInvalidFilterException {

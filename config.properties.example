@@ -70,6 +70,13 @@ password=maxwell
 # produce DDL records to ddl_kafka_topic (default: false)
 #output_ddl=true
 
+######### rocketmq stuff ###############
+
+#rocketmq.nameServerAddress=172.21.10.111:9876
+#rocketmq.producerGroup=maxwellBinlogProducer
+#rocketmq.topic=maxwellMysqlBinlog
+#rocketmq.ddlTopic=maxwellMysqlDdlBinlog
+
 ######### kafka stuff ###############
 
 # list of kafka brokers

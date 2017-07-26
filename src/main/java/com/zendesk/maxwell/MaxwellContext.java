@@ -328,6 +328,9 @@ public class MaxwellContext {
 			case "kafka":
 				this.producer = new MaxwellKafkaProducer(this, this.config.getKafkaProperties(), this.config.kafkaTopic);
 				break;
+			case "rocketmq":
+				this.producer = new MaxwellRocketMQProducer(this, this.config.getRocketmqProperties());
+				break;
 			case "kinesis":
 				this.producer = new MaxwellKinesisProducer(this, this.config.kinesisStream);
 				break;
