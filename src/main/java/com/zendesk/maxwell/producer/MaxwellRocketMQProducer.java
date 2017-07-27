@@ -8,6 +8,7 @@ import com.zendesk.maxwell.MaxwellContext;
 import com.zendesk.maxwell.metrics.Metrics;
 import com.zendesk.maxwell.replication.Position;
 import com.zendesk.maxwell.row.RowMap;
+import com.zendesk.maxwell.schema.ddl.DDLMap;
 import com.zendesk.maxwell.util.StoppableTask;
 import com.zendesk.maxwell.util.StoppableTaskState;
 import org.apache.rocketmq.client.exception.MQClientException;
@@ -167,8 +168,14 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 	public void sendAsync(RowMap r, AbstractAsyncProducer.CallbackCompleter cc) throws Exception {
 		String key = r.pkToJson(keyFormat);
 		String value = r.toJSON(outputConfig);
+		Message message;
 
-		Message message = new Message(topic, r.getTable(), key, value.getBytes());
+		// using table name as tag
+		if (r instanceof DDLMap) {
+			message = new Message(ddlTopic, r.getTable(), key, value.getBytes());
+		} else {
+			message = new Message(topic, r.getTable(), key, value.getBytes());
+		}
 
 		RocketMQCallback callback = new RocketMQCallback(cc, r.getPosition(), key, value, this.metricsTimer,
 				this.succeededMessageCount, this.failedMessageCount, this.succeededMessageMeter, this.failedMessageMeter, this.context);
