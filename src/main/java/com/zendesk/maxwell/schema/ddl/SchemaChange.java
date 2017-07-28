@@ -107,7 +107,8 @@ public abstract class SchemaChange {
 				return null;
 			} catch ( MaxwellSQLSyntaxError e) {
 				LOGGER.error("Error parsing SQL: '" + sql + "'");
-				throw (e);
+//				throw (e);
+				return null;
 			}
 		}
 	}
