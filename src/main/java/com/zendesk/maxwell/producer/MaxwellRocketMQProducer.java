@@ -170,11 +170,15 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 		String value = r.toJSON(outputConfig);
 		Message message;
 
+		// use database name and table name as message tag, ex: db_test.table_test
+		StringBuilder messageTag = new StringBuilder(r.getDatabase());
+		messageTag.append(".").append(r.getTable());
+
 		// using table name as tag
 		if (r instanceof DDLMap) {
-			message = new Message(ddlTopic, r.getTable(), key, value.getBytes());
+			message = new Message(ddlTopic, messageTag.toString(), key, value.getBytes());
 		} else {
-			message = new Message(topic, r.getTable(), key, value.getBytes());
+			message = new Message(topic, messageTag.toString(), key, value.getBytes());
 		}
 
 		RocketMQCallback callback = new RocketMQCallback(cc, r.getPosition(), key, value, this.metricsTimer,
