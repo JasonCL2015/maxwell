@@ -265,4 +265,14 @@ public class MysqlPositionStore {
 			return s.getUpdateCount();
 		}
 	}
+
+	public int deleteAllPosition() throws SQLException {
+		try ( Connection c = connectionPool.getConnection()) {
+			PreparedStatement s = c.prepareStatement(
+					"DELETE from `positions` where 1=1"
+			);
+			s.execute();
+			return s.getUpdateCount();
+		}
+	}
 }

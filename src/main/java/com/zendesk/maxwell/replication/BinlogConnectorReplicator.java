@@ -19,6 +19,7 @@ import com.zendesk.maxwell.schema.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +38,8 @@ public class BinlogConnectorReplicator extends AbstractReplicator implements Rep
 	static final Logger LOGGER = LoggerFactory.getLogger(BinlogConnectorReplicator.class);
 	private final boolean stopOnEOF;
 	private boolean hitEOF = false;
+
+	private MaxwellContext context;
 
 	public BinlogConnectorReplicator(
 		SchemaStore schemaStore,
@@ -93,6 +96,7 @@ public class BinlogConnectorReplicator extends AbstractReplicator implements Rep
 			false,
 			ctx.getConfig().clientID
 		);
+		this.context = ctx;
 	}
 
 	private void ensureReplicatorThread() throws Exception {
@@ -101,7 +105,23 @@ public class BinlogConnectorReplicator extends AbstractReplicator implements Rep
 			String binlogPos = client.getBinlogFilename() + ":" + client.getBinlogPosition();
 			String position = gtidStr == null ? binlogPos : gtidStr;
 			LOGGER.warn("replicator stopped at position: " + position + " -- restarting");
-			client.connect(5000);
+			int retryTimes = 3;
+			while (!client.isConnected() && retryTimes>0) {
+				client.connect(5000);
+				retryTimes--;
+			}
+			if(!client.isConnected()) {
+				Position initial;
+				try ( Connection c = context.getReplicationConnection() ) {
+					initial = Position.capture(c, false);
+					if(initial != null) {
+						client.setBinlogFilename(initial.getBinlogPosition().getFile());
+						client.setBinlogPosition(initial.getBinlogPosition().getOffset());
+						context.getPositionStore().deleteAllPosition();
+						context.getPositionStore().set(initial);
+					}
+				}
+			}
 		}
 	}
 
