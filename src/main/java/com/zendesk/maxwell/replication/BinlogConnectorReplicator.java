@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 public class BinlogConnectorReplicator extends AbstractReplicator implements Replicator {
@@ -101,26 +102,24 @@ public class BinlogConnectorReplicator extends AbstractReplicator implements Rep
 
 	private void ensureReplicatorThread() throws Exception {
 		if ( !client.isConnected() && !stopOnEOF ) {
-			String gtidStr = client.getGtidSet();
-			String binlogPos = client.getBinlogFilename() + ":" + client.getBinlogPosition();
-			String position = gtidStr == null ? binlogPos : gtidStr;
-			LOGGER.warn("replicator stopped at position: " + position + " -- restarting");
-			int retryTimes = 3;
-			while (!client.isConnected() && retryTimes>0) {
-				client.connect(5000);
-				retryTimes--;
-			}
-			if(!client.isConnected()) {
-				Position initial;
-				try ( Connection c = context.getReplicationConnection() ) {
-					initial = Position.capture(c, false);
-					if(initial != null) {
-						client.setBinlogFilename(initial.getBinlogPosition().getFile());
-						client.setBinlogPosition(initial.getBinlogPosition().getOffset());
-						context.getPositionStore().deleteAllPosition();
-						context.getPositionStore().set(initial);
-					}
-				}
+			synchronized (client) {
+				String gtidStr = client.getGtidSet();
+				String binlogPos = client.getBinlogFilename() + ":" + client.getBinlogPosition();
+				String position = gtidStr == null ? binlogPos : gtidStr;
+				LOGGER.warn("replicator stopped at position: " + position + " -- restarting");
+				if(!client.isConnected()) {
+                    Position initial;
+                    try ( Connection c = context.getReplicationConnection() ) {
+                        initial = Position.capture(c, false);
+                        if(initial != null) {
+                            client.setBinlogFilename(initial.getBinlogPosition().getFile());
+                            client.setBinlogPosition(initial.getBinlogPosition().getOffset());
+                            context.getPositionStore().deleteAllPosition();
+                            context.getPositionStore().set(initial);
+                            client.connect(5000);
+                        }
+                    }
+                }
 			}
 		}
 	}
