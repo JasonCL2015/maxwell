@@ -13,10 +13,11 @@ import com.zendesk.maxwell.util.StoppableTask;
 import com.zendesk.maxwell.util.StoppableTaskState;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
+import org.apache.rocketmq.client.producer.MessageQueueSelector;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.client.producer.selector.SelectMessageQueueByHash;
 import org.apache.rocketmq.common.message.Message;
-import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,6 +120,7 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 	private final ArrayBlockingQueue<RowMap> queue;
 	private Thread thread;
 	private StoppableTaskState taskState;
+	private MessageQueueSelector queueSelector;
 
 	public MaxwellRocketMQProducerWorker(MaxwellContext context, Properties rocketmqProperties, ArrayBlockingQueue<RowMap> queue) {
 		super(context);
@@ -144,6 +146,7 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 
 		this.queue = queue;
 		this.taskState = new StoppableTaskState("MaxwellRocketmqProducerWorker");
+		queueSelector = new SelectMessageQueueByHash();
 	}
 
 	@Override
@@ -186,7 +189,7 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 				this.succeededMessageCount, this.failedMessageCount, this.succeededMessageMeter, this.failedMessageMeter, this.context);
 
 		try {
-			rocketmq.send(message, callback);
+			rocketmq.send(message, queueSelector, messageTag, callback);
 		} catch (Exception e) {
 			LOGGER.error("send message error", e.getMessage());
 		}
