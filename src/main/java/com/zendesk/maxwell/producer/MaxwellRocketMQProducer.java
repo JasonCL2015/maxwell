@@ -3,9 +3,7 @@ package com.zendesk.maxwell.producer;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Meter;
-import com.codahale.metrics.Timer;
 import com.zendesk.maxwell.MaxwellContext;
-import com.zendesk.maxwell.metrics.Metrics;
 import com.zendesk.maxwell.replication.Position;
 import com.zendesk.maxwell.row.RowMap;
 import com.zendesk.maxwell.schema.ddl.DDLMap;
@@ -23,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 class RocketMQCallback implements SendCallback {
@@ -34,7 +31,6 @@ class RocketMQCallback implements SendCallback {
 	private final Position position;
 	private final String json;
 	private final String key;
-	private final Timer timer;
 	private final MaxwellContext context;
 
 	private Counter succeededMessageCount;
@@ -42,14 +38,12 @@ class RocketMQCallback implements SendCallback {
 	private Meter succeededMessageMeter;
 	private Meter failedMessageMeter;
 
-	public RocketMQCallback(AbstractAsyncProducer.CallbackCompleter cc, Position position, String key, String json,
-						 Timer timer, Counter producedMessageCount, Counter failedMessageCount, Meter producedMessageMeter,
+	public RocketMQCallback(AbstractAsyncProducer.CallbackCompleter cc, Position position, String key, String json,Counter producedMessageCount, Counter failedMessageCount, Meter producedMessageMeter,
 						 Meter failedMessageMeter, MaxwellContext context) {
 		this.cc = cc;
 		this.position = position;
 		this.key = key;
 		this.json = json;
-		this.timer = timer;
 		this.succeededMessageCount = producedMessageCount;
 		this.failedMessageCount = failedMessageCount;
 		this.succeededMessageMeter = producedMessageMeter;
@@ -69,7 +63,6 @@ class RocketMQCallback implements SendCallback {
 			LOGGER.debug("");
 		}
 		cc.markCompleted();
-		timer.update(cc.timeToSendMS(), TimeUnit.MILLISECONDS);
 	}
 
 	@Override
@@ -116,7 +109,6 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 	private String topic;
 	private final String ddlTopic;
 	private final RowMap.KeyFormat keyFormat;
-	private final Timer metricsTimer;
 	private final ArrayBlockingQueue<RowMap> queue;
 	private Thread thread;
 	private StoppableTaskState taskState;
@@ -140,9 +132,6 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 		this.ddlTopic =  rocketmqProperties.getProperty("ddlTopic");
 
 		keyFormat = RowMap.KeyFormat.HASH;
-
-		Metrics metrics = context.getMetrics();
-		this.metricsTimer = metrics.getRegistry().timer(metrics.metricName("message", "publish", "time"));
 
 		this.queue = queue;
 		this.taskState = new StoppableTaskState("MaxwellRocketmqProducerWorker");
@@ -185,7 +174,7 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 			message = new Message(topic, messageTag.toString(), key, value.getBytes());
 		}
 
-		RocketMQCallback callback = new RocketMQCallback(cc, r.getPosition(), key, value, this.metricsTimer,
+		RocketMQCallback callback = new RocketMQCallback(cc, r.getPosition(), key, value,
 				this.succeededMessageCount, this.failedMessageCount, this.succeededMessageMeter, this.failedMessageMeter, this.context);
 
 		try {
