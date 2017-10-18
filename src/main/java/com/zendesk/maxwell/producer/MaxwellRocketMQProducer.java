@@ -180,7 +180,7 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 		try {
 			rocketmq.send(message, queueSelector, messageTag.toString(), callback);
 		} catch (Exception e) {
-			LOGGER.error("send message error", e.getMessage());
+			LOGGER.error("send message error : "  + e.getLocalizedMessage());
 		}
 	}
 
