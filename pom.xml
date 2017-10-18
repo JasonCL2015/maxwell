@@ -217,6 +217,12 @@
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-pubsub</artifactId>
       <version>0.22.0-beta</version>
+      <exclusions>
+        <exclusion>
+          <groupId>io.netty</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.google.protobuf</groupId>
