@@ -127,7 +127,7 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 		try {
 			rocketmq.start();
 		} catch (MQClientException e) {
-			LOGGER.debug("rocketmq start fail");
+			LOGGER.error("rocketmq start fail : " + e.getLocalizedMessage());
 		}
 		this.ddlTopic =  rocketmqProperties.getProperty("ddlTopic");
 
@@ -159,28 +159,32 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 
 	@Override
 	public void sendAsync(RowMap r, AbstractAsyncProducer.CallbackCompleter cc) throws Exception {
-		String key = r.pkToJson(keyFormat);
-		String value = r.toJSON(outputConfig);
-		Message message;
-
-		// use database name and table name as message tag, ex: db_test.table_test
-		StringBuilder messageTag = new StringBuilder(r.getDatabase());
-		messageTag.append(".").append(r.getTable());
-
-		// using table name as tag
-		if (r instanceof DDLMap) {
-			message = new Message(ddlTopic, messageTag.toString(), key, value.getBytes());
-		} else {
-			message = new Message(topic, messageTag.toString(), key, value.getBytes());
-		}
-
-		RocketMQCallback callback = new RocketMQCallback(cc, r.getPosition(), key, value,
-				this.succeededMessageCount, this.failedMessageCount, this.succeededMessageMeter, this.failedMessageMeter, this.context);
-
 		try {
-			rocketmq.send(message, queueSelector, messageTag.toString(), callback);
+			String key = r.pkToJson(keyFormat);
+			String value = r.toJSON(outputConfig);
+			Message message;
+
+			// use database name and table name as message tag, ex: db_test.table_test
+			StringBuilder messageTag = new StringBuilder(r.getDatabase());
+			messageTag.append(".").append(r.getTable());
+
+			// using table name as tag
+			if (r instanceof DDLMap) {
+                message = new Message(ddlTopic, messageTag.toString(), key, value.getBytes());
+            } else {
+                message = new Message(topic, messageTag.toString(), key, value.getBytes());
+            }
+
+			RocketMQCallback callback = new RocketMQCallback(cc, r.getPosition(), key, value,
+                    this.succeededMessageCount, this.failedMessageCount, this.succeededMessageMeter, this.failedMessageMeter, this.context);
+
+			if(message.getBody().length >  4194304) {
+                LOGGER.warn("message body length exceed max 4194304, discard..");
+            } else {
+                rocketmq.send(message, queueSelector, messageTag.toString(), callback);
+            }
 		} catch (Exception e) {
-			LOGGER.error("send message error : "  + e.getLocalizedMessage());
+			LOGGER.error("send message fail : " + e.getLocalizedMessage());
 		}
 	}
 

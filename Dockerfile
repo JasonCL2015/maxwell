@@ -5,14 +5,16 @@ RUN apt-get update \
     && apt-get -y upgrade \
     && apt-get -y install build-essential maven
 
-COPY . /workspace
-
-RUN cd /workspace \
-    && KAFKA_VERSION=$KAFKA_VERSION make package MAXWELL_VERSION=$MAXWELL_VERSION \
-    && mkdir /app \
-    && mv /workspace/target/maxwell-$MAXWELL_VERSION/maxwell-$MAXWELL_VERSION/* /app/ \
+ENV WORKSPACE=/workspace
+WORKDIR $WORKSPACE
+ADD pom.xml .
+RUN ["mvn", "verify", "clean", "--fail-never"]
+ADD . $WORKSPACE
+RUN ["mvn", "package", "-DskipTests=true"]
+RUN mkdir /app \
+    && mv $WORKSPACE/target/maxwell-$MAXWELL_VERSION/maxwell-$MAXWELL_VERSION/* /app/ \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* /workspace/
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* $WORKSPACE/
 
 WORKDIR /app
 
