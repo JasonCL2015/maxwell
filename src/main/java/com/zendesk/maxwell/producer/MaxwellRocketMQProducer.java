@@ -27,7 +27,6 @@ class RocketMQCallback implements SendCallback {
 
 	public static final Logger LOGGER = LoggerFactory.getLogger(MaxwellRocketMQProducer.class);
 
-	private final AbstractAsyncProducer.CallbackCompleter cc;
 	private final Position position;
 	private final String json;
 	private final String key;
@@ -38,9 +37,8 @@ class RocketMQCallback implements SendCallback {
 	private Meter succeededMessageMeter;
 	private Meter failedMessageMeter;
 
-	public RocketMQCallback(AbstractAsyncProducer.CallbackCompleter cc, Position position, String key, String json,Counter producedMessageCount, Counter failedMessageCount, Meter producedMessageMeter,
+	public RocketMQCallback(Position position, String key, String json,Counter producedMessageCount, Counter failedMessageCount, Meter producedMessageMeter,
 						 Meter failedMessageMeter, MaxwellContext context) {
-		this.cc = cc;
 		this.position = position;
 		this.key = key;
 		this.json = json;
@@ -62,7 +60,6 @@ class RocketMQCallback implements SendCallback {
 			LOGGER.debug("   " + position);
 			LOGGER.debug("");
 		}
-		cc.markCompleted();
 	}
 
 	@Override
@@ -179,7 +176,7 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
                 message = new Message(topic, messageTag.toString(), key, value.getBytes());
             }
 
-			RocketMQCallback callback = new RocketMQCallback(cc, r.getPosition(), key, value,
+			RocketMQCallback callback = new RocketMQCallback(r.getPosition(), key, value,
                     this.succeededMessageCount, this.failedMessageCount, this.succeededMessageMeter, this.failedMessageMeter, this.context);
 
 			if(message.getBody().length >  4194304) {
@@ -189,6 +186,9 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
             }
 		} catch (Exception e) {
 			LOGGER.error("send message fail : " + e.getLocalizedMessage());
+		} finally {
+			// mark completed anyway
+			cc.markCompleted();
 		}
 	}
 
