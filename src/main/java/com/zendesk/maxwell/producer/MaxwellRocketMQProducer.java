@@ -150,9 +150,10 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 				}
 				this.push(row);
 			} catch ( Exception e ) {
-				taskState.stopped();
-				context.terminate(e);
-				return;
+				LOGGER.error("task meet error but I just want to continue.  error :  " + e.getLocalizedMessage());
+//				taskState.stopped();
+//				context.terminate(e);
+//				return;
 			}
 		}
 	}
