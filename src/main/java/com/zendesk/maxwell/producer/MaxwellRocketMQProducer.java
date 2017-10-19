@@ -70,12 +70,15 @@ class RocketMQCallback implements SendCallback {
 		this.failedMessageCount.inc();
 		this.failedMessageMeter.mark();
 
-		LOGGER.error(throwable.getClass().getSimpleName() + " @ " + position + " -- " + key);
-		LOGGER.error(throwable.getLocalizedMessage());
-		if (!this.context.getConfig().ignoreProducerError) {
-			this.context.terminate((Exception) throwable);
-			return;
-		}
+		LOGGER.error("send message failed with error but I just want to continue.  error :  " + throwable.getLocalizedMessage());
+		// TODO maybe we should put the message back to  queue, but the message may become disorder
+//		LOGGER.error(throwable.getClass().getSimpleName() + " @ " + position + " -- " + key);
+//		LOGGER.error(throwable.getLocalizedMessage());
+//		if (!this.context.getConfig().ignoreProducerError) {
+//			this.context.terminate((Exception) throwable);
+//			return;
+//		}
+
 	}
 }
 
