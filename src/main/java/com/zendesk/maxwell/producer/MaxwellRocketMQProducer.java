@@ -20,8 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
+import java.util.stream.IntStream;
 
 class RocketMQCallback implements SendCallback {
 
@@ -105,7 +105,6 @@ public class MaxwellRocketMQProducer extends AbstractProducer {
 class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Runnable, StoppableTask {
 	static final Logger LOGGER = LoggerFactory.getLogger(MaxwellRocketMQProducer.class);
 
-	private DefaultMQProducer rocketmq;
 	private String topic;
 	private final String ddlTopic;
 	private final RowMap.KeyFormat keyFormat;
@@ -113,6 +112,8 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 	private Thread thread;
 	private StoppableTaskState taskState;
 	private MessageQueueSelector queueSelector;
+	private ExecutorService rocketmqPool;
+	private LinkedBlockingQueue<MessageWrapper> messageQueue = new LinkedBlockingQueue<>();
 
 	public MaxwellRocketMQProducerWorker(MaxwellContext context, Properties rocketmqProperties, ArrayBlockingQueue<RowMap> queue) {
 		super(context);
@@ -122,13 +123,24 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 			this.topic = "maxwell";
 		}
 
-		this.rocketmq = new DefaultMQProducer(rocketmqProperties.getProperty("producerGroup"));
-		this.rocketmq.setNamesrvAddr(rocketmqProperties.getProperty("nameServerAddress"));
-		try {
-			rocketmq.start();
-		} catch (MQClientException e) {
-			LOGGER.error("rocketmq start fail : " + e.getLocalizedMessage());
-		}
+		rocketmqPool = Executors.newFixedThreadPool(3);
+		IntStream.range(0,3).parallel().forEach(i -> rocketmqPool.submit(() -> {
+				Thread.currentThread().setName("rocketmq-producer-" + i);
+				DefaultMQProducer mqProducer = new DefaultMQProducer(rocketmqProperties.getProperty("producerGroup"));
+				mqProducer.setNamesrvAddr(rocketmqProperties.getProperty("nameServerAddress"));
+				try {
+					mqProducer.start();
+					LOGGER.info("rocketmq producer thread start on thread : " + Thread.currentThread().getName());
+				} catch (MQClientException e) {
+					LOGGER.error("rocketmq start fail : " + e.getLocalizedMessage());
+				}
+				while(true) {
+					MessageWrapper mw = messageQueue.take();
+					mqProducer.send(mw.getMessage(), queueSelector, mw.getMessageTag(), mw.getCallback());
+				}
+			})
+		);
+
 		this.ddlTopic =  rocketmqProperties.getProperty("ddlTopic");
 
 		keyFormat = RowMap.KeyFormat.HASH;
@@ -158,6 +170,45 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 		}
 	}
 
+	class MessageWrapper {
+		private Message message;
+		private String messageTag;
+		private RocketMQCallback callback;
+
+		public MessageWrapper() {
+		}
+
+		public MessageWrapper(Message message, String messageTag, RocketMQCallback callback) {
+			this.message = message;
+			this.messageTag = messageTag;
+			this.callback = callback;
+		}
+
+		public Message getMessage() {
+			return message;
+		}
+
+		public void setMessage(Message message) {
+			this.message = message;
+		}
+
+		public String getMessageTag() {
+			return messageTag;
+		}
+
+		public void setMessageTag(String messageTag) {
+			this.messageTag = messageTag;
+		}
+
+		public RocketMQCallback getCallback() {
+			return callback;
+		}
+
+		public void setCallback(RocketMQCallback callback) {
+			this.callback = callback;
+		}
+	}
+
 	@Override
 	public void sendAsync(RowMap r, AbstractAsyncProducer.CallbackCompleter cc) throws Exception {
 		try {
@@ -182,7 +233,8 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 			if(message.getBody().length >  4194304) {
                 LOGGER.warn("message body length exceed max 4194304, discard..");
             } else {
-                rocketmq.send(message, queueSelector, messageTag.toString(), callback);
+				MessageWrapper mw = new MessageWrapper(message, messageTag.toString(), callback);
+				messageQueue.offer(mw);
             }
 		} catch (Exception e) {
 			LOGGER.error("send message fail : " + e.getLocalizedMessage());
@@ -195,7 +247,7 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 	@Override
 	public void requestStop() {
 		taskState.requestStop();
-		rocketmq.shutdown();
+		rocketmqPool.shutdown();
 	}
 
 	@Override
