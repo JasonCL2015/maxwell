@@ -1,9 +1,11 @@
-FROM java:openjdk-8
-ENV MAXWELL_VERSION=1.10.8 KAFKA_VERSION=0.10.1.0
+FROM maven:3.5-jdk-8
+ENV MAXWELL_VERSION=1.10.9 KAFKA_VERSION=0.11.0.1
+
+COPY . /workspace
 
 RUN apt-get update \
     && apt-get -y upgrade \
-    && apt-get -y install build-essential maven
+    && apt-get install -y build-essential
 
 ENV WORKSPACE=/workspace
 WORKDIR $WORKSPACE

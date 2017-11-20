@@ -12,7 +12,7 @@ password=maxwell
 
 ######### general stuff #############
 
-# choose where to produce data to. currently this is one of: stdout|file|kafka|pubsub|rabbitmq
+# choose where to produce data to. currently this is one of: stdout|file|kafka|kinesis|pubsub|rabbitmq|redis
 #producer=kafka
 
 # set delivery timeout (including acknowledgement) in milliseconds for a COMMIT row message that has been sent by the producer,
@@ -116,9 +116,8 @@ password=maxwell
 #kafka.batch.size=16384
 
 # a few defaults.
-# These are 0.9-specific. They may or may not work with other versions.
+# These are 0.11-specific. They may or may not work with other versions.
 kafka.compression.type=snappy
-kafka.metadata.fetch.timeout.ms=5000
 kafka.retries=0
 kafka.acks=1
 
@@ -166,7 +165,15 @@ kinesis_stream=maxwell
 #rabbitmq_exchange=maxwell
 #rabbitmq_exchange_type=fanout
 #rabbitmq_exchange_durable=false
+#rabbitmq_exchange_autodelete=false
 #rabbitmq_routing_key_template=%db%.%table%
+
+######### redis ######################
+#redis_host=redis_host
+#redis_port=6379
+#redis_auth=redis_auth
+#redis_database=0
+#redis_pub_channel=maxwell
 
 ######### filter stuff ###############
 
@@ -203,14 +210,10 @@ kinesis_stream=maxwell
 
 ######### encryption ###############
 
-# convert the data field to a json string and encrypt it
-#encrypt_data=true
+# Encryption mode. Possible values are none, data, and all. (default none)
+#encrypt=none
 
-# convert the whole payload to a json string and encrypt it
-#encrypt_all=true
-
-# specify the encryption key and secret key
-#encryption_key=aaaaaaaaaaaaaaaa
+# Specify the secret key to be used
 #secret_key=RandomInitVector
 
 ######## monitoring stuff ###########
