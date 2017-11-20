@@ -127,6 +127,7 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 		IntStream.range(0,3).parallel().forEach(i -> rocketmqPool.submit(() -> {
 				Thread.currentThread().setName("rocketmq-producer-" + i);
 				DefaultMQProducer mqProducer = new DefaultMQProducer(rocketmqProperties.getProperty("producerGroup"));
+				mqProducer.setSendMsgTimeout(10000);
 				mqProducer.setNamesrvAddr(rocketmqProperties.getProperty("nameServerAddress"));
 				try {
 					mqProducer.start();
