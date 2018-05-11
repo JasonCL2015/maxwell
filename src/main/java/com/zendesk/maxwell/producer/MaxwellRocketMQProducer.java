@@ -124,18 +124,18 @@ class MaxwellRocketMQProducerWorker extends AbstractAsyncProducer implements Run
 		}
 
 		rocketmqPool = Executors.newFixedThreadPool(3);
+		DefaultMQProducer mqProducer = new DefaultMQProducer(rocketmqProperties.getProperty("producerGroup"));
+		mqProducer.setSendMsgTimeout(10000);
+		mqProducer.setNamesrvAddr(rocketmqProperties.getProperty("nameServerAddress"));
+		try {
+			mqProducer.start();
+			LOGGER.info("rocketmq producer thread start on thread : " + Thread.currentThread().getName());
+		} catch (MQClientException e) {
+			LOGGER.error("rocketmq start fail : " + e.getLocalizedMessage());
+		}
 		IntStream.range(0,3).parallel().forEach(i -> rocketmqPool.submit(() -> {
-				Thread.currentThread().setName("rocketmq-producer-" + i);
-				DefaultMQProducer mqProducer = new DefaultMQProducer(rocketmqProperties.getProperty("producerGroup"));
-				mqProducer.setSendMsgTimeout(10000);
-				mqProducer.setNamesrvAddr(rocketmqProperties.getProperty("nameServerAddress"));
-				try {
-					mqProducer.start();
-					LOGGER.info("rocketmq producer thread start on thread : " + Thread.currentThread().getName());
-				} catch (MQClientException e) {
-					LOGGER.error("rocketmq start fail : " + e.getLocalizedMessage());
-				}
-				while(true) {
+			Thread.currentThread().setName("rocketmq-producer-" + i);
+			while(true) {
 					MessageWrapper mw = messageQueue.take();
 					mqProducer.send(mw.getMessage(), queueSelector, mw.getMessageTag(), mw.getCallback());
 				}

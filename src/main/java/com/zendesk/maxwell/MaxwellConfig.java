@@ -557,11 +557,6 @@ public class MaxwellConfig extends AbstractConfig {
 	}
 
 	private void validatePartitionBy() {
-		if (this.producerType.equals("rocketmq")) {
-			if ( !this.rocketmqProperties.containsKey("nameServerAddress") ) {
-				usageForOptions("You must specify rocketmq.nameServerAddress for the rocketmq producer!", "rocketmq");
-			}
-		} else if ( this.producerType.equals("kafka") ) {
 		if ( this.producerPartitionKey == null && this.kafkaPartitionKey != null ) {
 			LOGGER.warn("kafka_partition_by is deprecated, please use producer_partition_by");
 			this.producerPartitionKey = this.kafkaPartitionKey;
@@ -593,7 +588,11 @@ public class MaxwellConfig extends AbstractConfig {
 	public void validate() {
 		validatePartitionBy();
 
-		if ( this.producerType.equals("kafka") ) {
+		if (this.producerType.equals("rocketmq")) {
+			if (!this.rocketmqProperties.containsKey("nameServerAddress")) {
+				usageForOptions("You must specify rocketmq.nameServerAddress for the rocketmq producer!", "rocketmq");
+			}
+		} else if ( this.producerType.equals("kafka") ) {
 			if ( !this.kafkaProperties.containsKey("bootstrap.servers") ) {
 				usageForOptions("You must specify kafka.bootstrap.servers for the kafka producer!", "kafka");
 			}
@@ -604,7 +603,6 @@ public class MaxwellConfig extends AbstractConfig {
 					&& !this.kafkaPartitionHash.equals("murmur3") ) {
 				usageForOptions("please specify --kafka_partition_hash=default|murmur3", "kafka_partition_hash");
 			}
-}
 			if ( !this.kafkaKeyFormat.equals("hash") && !this.kafkaKeyFormat.equals("array") )
 				usageForOptions("invalid kafka_key_format: " + this.kafkaKeyFormat, "kafka_key_format");
 
@@ -642,12 +640,12 @@ public class MaxwellConfig extends AbstractConfig {
 			}
 
 			this.replicationMysql = new MaxwellMysqlConfig(
-				this.maxwellMysql.host,
-				this.maxwellMysql.port,
-				null,
-				this.maxwellMysql.user,
-				this.maxwellMysql.password,
-				this.maxwellMysql.sslMode
+					this.maxwellMysql.host,
+					this.maxwellMysql.port,
+					null,
+					this.maxwellMysql.user,
+					this.maxwellMysql.password,
+					this.maxwellMysql.sslMode
 			);
 
 			this.replicationMysql.jdbcOptions = this.maxwellMysql.jdbcOptions;
@@ -682,13 +680,13 @@ public class MaxwellConfig extends AbstractConfig {
 		if ( this.filter == null ) {
 			try {
 				this.filter = new MaxwellFilter(
-					includeDatabases,
-					excludeDatabases,
-					includeTables,
-					excludeTables,
-					blacklistDatabases,
-					blacklistTables,
-					includeColumnValues
+						includeDatabases,
+						excludeDatabases,
+						includeTables,
+						excludeTables,
+						blacklistDatabases,
+						blacklistTables,
+						includeColumnValues
 				);
 			} catch (MaxwellInvalidFilterException e) {
 				usage("Invalid filter options: " + e.getLocalizedMessage());
