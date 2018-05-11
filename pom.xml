@@ -4,7 +4,7 @@
 
   <groupId>com.zendesk</groupId>
   <artifactId>maxwell</artifactId>
-  <version>1.10.9</version>
+  <version>1.14.4</version>
   <packaging>jar</packaging>
 
   <name>maxwell</name>
@@ -108,7 +108,7 @@
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>amazon-kinesis-producer</artifactId>
-      <version>0.12.3</version>
+      <version>0.12.8</version>
     </dependency>
     <dependency>
       <groupId>mysql</groupId>
@@ -149,6 +149,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>com.github.stefanbirkner</groupId>
+      <artifactId>system-rules</artifactId>
+      <version>1.17.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
       <version>2.8.2</version>
@@ -171,7 +177,7 @@
     <dependency>
       <groupId>com.github.shyiko</groupId>
       <artifactId>mysql-binlog-connector-java</artifactId>
-      <version>0.13.0</version>
+      <version>0.16.1</version>
     </dependency>
     <dependency>
       <groupId>net.sf.jopt-simple</groupId>
@@ -216,7 +222,7 @@
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-pubsub</artifactId>
-      <version>0.22.0-beta</version>
+      <version>0.30.0-beta</version>
       <exclusions>
         <exclusion>
           <groupId>io.netty</groupId>
@@ -258,6 +264,11 @@
       <groupId>org.coursera</groupId>
       <artifactId>metrics-datadog</artifactId>
       <version>1.1.10</version>
+    </dependency>
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-sqs</artifactId>
+      <version>1.11.68</version>
     </dependency>
     <dependency>
       <groupId>org.apache.rocketmq</groupId>
@@ -358,6 +369,7 @@
         <version>3.1.0</version>
         <configuration>
           <appendAssemblyId>false</appendAssemblyId>
+          <tarLongFileMode>posix</tarLongFileMode>
           <descriptors>
             <descriptor>src/main/assembly/assembly.xml</descriptor>
           </descriptors>
@@ -370,6 +382,20 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.0.2</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+            </manifest>
+          </archive>
+        </configuration>
       </plugin>
 
       <plugin>
@@ -386,7 +412,6 @@
               <includeScope>runtime</includeScope>
             </configuration>
           </execution>
-
           <execution>
             <id>kafka-clients</id>
             <phase>compile</phase>
@@ -402,5 +427,34 @@
       </plugin>
 
     </plugins>
+    <pluginManagement>
+      <plugins>
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <versionRange>[2.8,)</versionRange>
+                    <goals>
+                      <goal>copy-dependencies</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore></ignore>
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 </project>

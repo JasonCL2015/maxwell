@@ -9,9 +9,11 @@ public class MaxwellOutputConfig {
 	public boolean includesBinlogPosition;
 	public boolean includesGtidPosition;
 	public boolean includesCommitInfo;
+	public boolean includesXOffset;
 	public boolean includesNulls;
 	public boolean includesServerId;
 	public boolean includesThreadId;
+	public boolean includesRowQuery;
 	public boolean outputDDL;
 	public List<Pattern> excludeColumns;
 	public EncryptionMode encryptionMode;
@@ -24,6 +26,7 @@ public class MaxwellOutputConfig {
 		this.includesNulls = true;
 		this.includesServerId = false;
 		this.includesThreadId = false;
+		this.includesRowQuery = false;
 		this.outputDDL = false;
 		this.excludeColumns = new ArrayList<>();
 		this.encryptionMode = EncryptionMode.ENCRYPT_NONE;

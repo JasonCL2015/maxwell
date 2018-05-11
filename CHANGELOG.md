@@ -1,5 +1,105 @@
 # Maxwell changelog
 
+### [v1.14.4](https://github.com/zendesk/maxwell/releases/tag/v1.14.4): "chinese food"
+
+
+ - Fix race condition in SchemaCapturer
+
+
+### [v1.14.3](https://github.com/zendesk/maxwell/releases/tag/v1.14.3): "what's for lunch?"
+
+- Enable jvm metrics
+
+### [v1.14.2](https://github.com/zendesk/maxwell/releases/tag/v1.14.2): "bork bork bork"
+
+
+- fix regression in 1.14.1 around bootstrapping host detection
+- fix heartbeating code around table includes
+
+
+### [v1.14.1](https://github.com/zendesk/maxwell/releases/tag/v1.14.1): "half asleep in frog pajamas"
+
+
+- bootstraps can now take a client_id
+- improved config validation for embedded mode
+
+
+### [v1.14.0](https://github.com/zendesk/maxwell/releases/tag/v1.14.0): "cats, cats, more cats.  sadness at lack of cats."
+
+
+- new feature `--output_xoffset` to uniquely identify rows within transactions,
+  thx Jens Gyti
+- Bug fixes around "0000-00-00" times.
+- Bug fixes around dates pre 1000 AD
+
+
+### [v1.13.5](https://github.com/zendesk/maxwell/releases/tag/v1.13.5): "cyclone keni is real"
+
+- Support environment variable based configuration
+
+### [v1.13.4](https://github.com/zendesk/maxwell/releases/tag/v1.13.4): "it was just a dream"
+
+- Added possibility to do not declare the rabbitmq exchange.
+
+### [v1.13.3](https://github.com/zendesk/maxwell/releases/tag/v1.13.3): "winner winner chicken dinner"
+
+
+ - Add logging for binlog errors
+ - Maven warning fix
+ - Do not include current position DDL schema to avoid processing DDL twice
+ - Always write null fields in primary key fields
+ - Bugfix: fix http_path_prefix command line option issue
+
+### [v1.13.2](https://github.com/zendesk/maxwell/releases/tag/v1.13.2): "I just bought them to sleep in"
+
+
+- fix a bug with CHARACTER SET = DEFAULT
+- maxwell now eclipse-friendly.
+- configurable bind-address for maxwell's http server
+
+
+### [v1.13.1](https://github.com/zendesk/maxwell/releases/tag/v1.13.1): "line up your exes in song"
+
+
+- redis producer now supports LPUSH, thx @m-denton
+- RowMap can now contain artbitrary attributes for embedded maxwell, thx @jkgeyti
+- bugfix: fix jdbc option parsing when value contains `=`
+- bugfix: apparently the SQS producer was disabled
+- bugfix: fix a situation where adding a second client could cause
+  schemas to become out of sync
+- support for --daemon
+
+
+### [v1.13.0](https://github.com/zendesk/maxwell/releases/tag/v1.13.0): "sorry, I burned your clothes"
+
+
+- proper SSL connection support, thanks @cadams5
+- support for including original SQL in insert/update/deletes, thanks @saimon7
+- fixes for float4, float8 and other non-mysql datatypes
+- bump kinesis lib to 0.12.8
+- fix for bug when two databases share a single table
+
+
+### [v1.12.0](https://github.com/zendesk/maxwell/releases/tag/v1.12.0): "Cold Feet, literally and metaphorically."
+
+
+- Support for injecting a custom producer, thanks @tomcollinsproject
+- New producer for Amazon SQS, thanks @vikrant2mahajan
+- Maxwell can now filter rows based on column values, thanks @finnplay
+- Fixes for the Google Pubsub producer (it was really broken), thanks @finnplay
+- DDL output can now optionally include the source SQL, thanks @sungjuly
+- Support for double-quoted table/database/etc names
+- rabbitmq option for persistent messages, thanks @d-babiak
+- SQL parser bugfix for values like +1.234, thanks @hexene
+
+
+### [v1.11.0](https://github.com/zendesk/maxwell/releases/tag/v1.11.0): "the latest, the greatest"
+
+
+     - default kafka client upgrades to 0.11.0.1
+     - fix the encryption issue (https://github.com/zendesk/maxwell/issues/803)
+
+
 ### [v1.10.9](https://github.com/zendesk/maxwell/releases/tag/v1.10.9): "no one left behind"
 
 We recommend all v1.10.7 and v1.10.8 users upgrade to v1.10.9.
@@ -74,12 +174,12 @@ Notable changes:
 
 ### [v1.10.1](https://github.com/zendesk/maxwell/releases/tag/v1.10.1): "forgive and forget"
 
-The observable changes in this minor release are a new configuration for Kafka/Kinesis producer to abort processing on publish errors, and support of Kafka 0.10.2. Also a bunch of good refactoring has been done for heartbeat processing. List of changes:
+The observable changes in this minor release are a new configuration for Kafka/Kinesis producer to abort processing on publish errors, and support of Kafka 0.10.2. Also a bunch of good refactoring has been done for heartbeat processing. List of changes:   
 
-- Support Kafka 0.10.2
-- Stop procesing RDS hearbeats
-- Keep maxwell heartbeat going every 10 seconds when database is quiet
-- Allow for empty double-quoted string literals for database schema changes
+- Support Kafka 0.10.2   
+- Stop procesing RDS hearbeats   
+- Keep maxwell heartbeat going every 10 seconds when database is quiet   
+- Allow for empty double-quoted string literals for database schema changes   
 - Ignore Kafka/Kinesis producer errors based on new configuration ignore_producer_error
 
 ### [v1.10.0](https://github.com/zendesk/maxwell/releases/tag/v1.10.0): "slightly more ones than zeroes"
@@ -338,7 +438,7 @@ This is a bugfix release, which fixes:
 - Eddie McLean gives some helpful patches around bootstrapping
 - Bugfixes for the patch-up-the-schema code around unsigned ints
 
-### [v1.1.0-pre3](https://github.com/zendesk/maxwell/releases/tag/v1.1.0-pre3):
+### [v1.1.0-pre3](https://github.com/zendesk/maxwell/releases/tag/v1.1.0-pre3): 
 
 - forgot to include some updates that back-patch unsigned column
   problems
@@ -477,7 +577,7 @@ changed.  Thanks @kristiankaufmann
 
 ### [v0.14.2](https://github.com/zendesk/maxwell/releases/tag/v0.14.2): "Maxwell Sandvik 88"
 
-- capture the mysql database along with the rest of the schema.  Eliding it was a bad premature optimization that led to crashes when tables in the mysql database changed.
+- capture the mysql database along with the rest of the schema.  Eliding it was a bad premature optimization that led to crashes when tables in the mysql database changed. 
 
 ### [v0.14.1](https://github.com/zendesk/maxwell/releases/tag/v0.14.1): "be liberal in what you accept.  Even if nonsensical."
 
@@ -485,11 +585,11 @@ changed.  Thanks @kristiankaufmann
 
 ### [v0.14.0](https://github.com/zendesk/maxwell/releases/tag/v0.14.0): "the slow but inevitable slide"
 
-This release introduces row filters, allowing you to include or exclude tables from maxwell's output based on names or regular expressions.
+This release introduces row filters, allowing you to include or exclude tables from maxwell's output based on names or regular expressions.  
 
 ### [v0.13.1](https://github.com/zendesk/maxwell/releases/tag/v0.13.1): "well that was somewhat expected"
 
-v0.13.1 is a bug fix of v0.13.0 -- fixes a bug where long rows were truncated.
+v0.13.1 is a bug fix of v0.13.0 -- fixes a bug where long rows were truncated. 
 
 v0.13.0 contains:
 - Big performance boost for maxwell: 75% faster in some benchmarks
@@ -507,7 +607,7 @@ _This release has a pretty bad bug.  do not use._
 
 ### [v0.12.0](https://github.com/zendesk/maxwell/releases/tag/v0.12.0): "what do I call them?  Slippers?  Why, are you jealous?"
 
-- add support for BIT columns.
+- add support for BIT columns.  
 
 ### [v0.11.4](https://github.com/zendesk/maxwell/releases/tag/v0.11.4): "13 steps"
 
@@ -552,7 +652,7 @@ It also contains a bugfix around server_id handling.
 ### [v0.10.0](https://github.com/zendesk/maxwell/releases/tag/v0.10.0): "The first word is French"
 
 - Mysql 5.6 checksum support!
-- some more bugfixes with the SQL parser
+- some more bugfixes with the SQL parser 
 
 ### [v0.11.0-PRE4](https://github.com/zendesk/maxwell/releases/tag/v0.11.0-PRE4): "except for that other thing"
 
@@ -603,7 +703,7 @@ It also contains a bugfix around server_id handling.
 ### [v0.9.2](https://github.com/zendesk/maxwell/releases/tag/v0.9.2): "Cat's tongue"
 
 - bump open-replicator buffer to 50mb by default
-- log to STDERR, not STDOUT
+- log to STDERR, not STDOUT 
 - `--output_file` option for file producer
 
 ### [v0.9.1](https://github.com/zendesk/maxwell/releases/tag/v0.9.1): "bugs, bugs, bugs, lies, statistics"
@@ -613,7 +713,7 @@ It also contains a bugfix around server_id handling.
 
 ### [v0.9.0](https://github.com/zendesk/maxwell/releases/tag/v0.9.0): Vanchi says "eat"
 
-Also, vanchi is so paranoid he's worried immediately about this.
+Also, vanchi is so paranoid he's worried immediately about this. 
 - mysql 5.6 support (without checksum support, yet)
 - fix a bunch of miscellaneous bugs @akshayi1 found (REAL, BOOL, BOOLEAN types, TRUNCATE TABLE)
 
@@ -668,13 +768,13 @@ v0.4.0 fixes some bugs with long-lived mysql connections by adding connection po
 
 ### [v0.3.0](https://github.com/zendesk/maxwell/releases/tag/v0.3.0): 0.3.0
 
-This version fixes a fairly nasty bug in which the binlog-position flush thread was sharing a connection with the rest of the system, leading to crashes.
+This version fixes a fairly nasty bug in which the binlog-position flush thread was sharing a connection with the rest of the system, leading to crashes. 
 
 It also enables kafka gzip compression by default.
 
 ### [v0.2.2](https://github.com/zendesk/maxwell/releases/tag/v0.2.2): 0.2.2
 
-Version 0.2.2 sets up the LANG environment variable, which fixes a bug in utf-8 handling.
+Version 0.2.2 sets up the LANG environment variable, which fixes a bug in utf-8 handling. 
 
 ### [v0.2.1](https://github.com/zendesk/maxwell/releases/tag/v0.2.1): v0.2.1
 
@@ -682,7 +782,7 @@ version 0.2.1 makes Maxwell ignore CREATE INDEX ddl statements and others.
 
 ### [v0.2.0](https://github.com/zendesk/maxwell/releases/tag/v0.2.0): 0.2.0
 
-This release gets Maxwell storing the last-written binlog position inside the mysql master itself.
+This release gets Maxwell storing the last-written binlog position inside the mysql master itself. 
 
 ### [v0.1.4](https://github.com/zendesk/maxwell/releases/tag/v0.1.4): 0.1.4
 
@@ -694,7 +794,7 @@ Adds kafka command line options.
 
 ### [v0.1.1](https://github.com/zendesk/maxwell/releases/tag/v0.1.1): 0.1.1
 
-v0.1.1, a small bugfix release.
+v0.1.1, a small bugfix release. 
 
 ### [v0.1](https://github.com/zendesk/maxwell/releases/tag/v0.1): 0.1
 
