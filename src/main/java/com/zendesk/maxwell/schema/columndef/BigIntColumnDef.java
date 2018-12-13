@@ -2,21 +2,14 @@ package com.zendesk.maxwell.schema.columndef;
 
 import java.math.BigInteger;
 
-import com.google.code.or.common.util.MySQLConstants;
-
 public class BigIntColumnDef extends ColumnDef {
 	static private final BigInteger longlong_max = BigInteger.ONE.shiftLeft(64);
 
 	protected boolean signed;
 
-	public BigIntColumnDef(String name, String type, int pos, boolean signed) {
+	public BigIntColumnDef(String name, String type, short pos, boolean signed) {
 		super(name, type, pos);
 		this.signed = signed;
-	}
-
-	@Override
-	public boolean matchesMysqlType(int type) {
-		return type == MySQLConstants.TYPE_LONGLONG;
 	}
 
 	private Object toNumeric(Object value) {

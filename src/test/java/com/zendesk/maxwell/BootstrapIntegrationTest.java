@@ -1,5 +1,6 @@
 package com.zendesk.maxwell;
 
+import com.zendesk.maxwell.filtering.Filter;
 import com.zendesk.maxwell.producer.EncryptionMode;
 import com.zendesk.maxwell.producer.MaxwellOutputConfig;
 import com.zendesk.maxwell.row.RowMap;
@@ -40,15 +41,27 @@ public class BootstrapIntegrationTest extends MaxwellTestWithIsolatedServer {
 	}
 
 	@Test
+	public void testJSONType() throws Exception {
+		requireMinimumVersion(server.VERSION_5_7);
+		runJSON("json/bootstrap-json-type");
+	}
+
+	@Test
 	public void testBootstrapIsWhitelisted() throws Exception {
-		MaxwellFilter filter = new MaxwellFilter();
-		filter.includeDatabase("shard_1");
-		runJSON("json/bootstrap-whitelist", filter);
+		final Filter filter = new Filter();
+		filter.addRule("exclude: *.*, include: shard_1.*");
+		runJSON("json/bootstrap-whitelist", (c) -> c.filter = filter);
 	}
 
 	@Test
 	public void testBootstrapNullValues() throws Exception {
 		runJSON("json/bootstrap-null-values");
+	}
+
+	@Test
+	public void testBootstrapJSFilters() throws Exception {
+		String dir = MaxwellTestSupport.getSQLDir();
+		runJSON("json/bootstrap-js-filters", (c) -> c.javascriptFile = dir + "/json/filter.javascript");
 	}
 
 	@Test
@@ -69,6 +82,11 @@ public class BootstrapIntegrationTest extends MaxwellTestWithIsolatedServer {
 		testColumnType("tinyint", "127", 127);
 		testColumnType("tinyint unsigned", "0", 0);
 		testColumnType("tinyint unsigned", "255", 255);
+	}
+
+	@Test
+	public void testTinyInt1() throws Exception {
+		testColumnType("tinyint(1)", "9", 9);
 	}
 
 	@Test
@@ -107,8 +125,7 @@ public class BootstrapIntegrationTest extends MaxwellTestWithIsolatedServer {
 
 	@Test
 	public void testStringTypes( ) throws Exception {
-		String epoch = String.valueOf(new Timestamp(0)); // timezone dependent
-		testColumnType("datetime", "'1000-01-01 00:00:00'","1000-01-01 00:00:00", null);
+		testColumnType("datetime", "'1000-01-01 00:00:00'","1000-01-01 00:00:00", "1000-01-01 00:00:00");
 
 		testColumnType("tinytext", "'hello'", "hello");
 		testColumnType("text", "'hello'", "hello");
@@ -118,12 +135,6 @@ public class BootstrapIntegrationTest extends MaxwellTestWithIsolatedServer {
 		testColumnType("char", "'h'", "h");
 		testColumnType("date", "'2015-11-07'","2015-11-07");
 		testColumnType("datetime", "'2015-11-07 01:02:03'","2015-11-07 01:02:03");
-
-		if (server.supportsZeroDates()) {
-			testColumnType("date", "'0000-00-00'", "0000-00-00");
-			testColumnType("datetime", "'0000-00-00 00:00:00'", "0000-00-00 00:00:00");
-			testColumnType("timestamp", "'0000-00-00 00:00:00'", "0000-00-00 00:00:00");
-		}
 
 		testColumnType("datetime", "'1000-01-01 00:00:00'","1000-01-01 00:00:00");
 
@@ -135,8 +146,21 @@ public class BootstrapIntegrationTest extends MaxwellTestWithIsolatedServer {
 	}
 
 	@Test
+	public void testZeroDates() throws Exception {
+		if (server.supportsZeroDates()) {
+			testColumnType("date", "'0000-00-00'", "0000-00-00", null);
+			testColumnType("datetime", "'0000-00-00 00:00:00'", "0000-00-00 00:00:00", null);
+			testColumnType("timestamp", "'0000-00-00 00:00:00'", "0000-00-00 00:00:00", null);
+		}
+	}
+
+	@Test
 	public void testSubsecondTypes() throws Exception {
 		requireMinimumVersion(server.VERSION_5_6);
+		testColumnType("time(3)", "'01:02:03.123456'","01:02:03.123");
+		testColumnType("time(6)", "'01:02:03.123456'","01:02:03.123456");
+		testColumnType("time(3)", "'01:02:03.123'","01:02:03.123");
+
 		testColumnType("timestamp(6)", "'2015-11-07 01:02:03.333444'","2015-11-07 01:02:03.333444");
 		testColumnType("timestamp(6)", "'2015-11-07 01:02:03.123'","2015-11-07 01:02:03.123000");
 		testColumnType("timestamp(6)", "'2015-11-07 01:02:03.0'","2015-11-07 01:02:03.000000");
@@ -150,9 +174,6 @@ public class BootstrapIntegrationTest extends MaxwellTestWithIsolatedServer {
 		testColumnType("datetime(6)", "'2015-11-07 01:02:03.123'","2015-11-07 01:02:03.123000");
 		testColumnType("datetime(3)", "'2015-11-07 01:02:03.123456'","2015-11-07 01:02:03.123");
 		testColumnType("datetime(3)", "'2015-11-07 01:02:03.123'","2015-11-07 01:02:03.123");
-		testColumnType("time(3)", "'01:02:03.123456'","01:02:03.123");
-		testColumnType("time(6)", "'01:02:03.123456'","01:02:03.123456");
-		testColumnType("time(3)", "'01:02:03.123'","01:02:03.123");
 	}
 
 	@Test
@@ -194,7 +215,7 @@ public class BootstrapIntegrationTest extends MaxwellTestWithIsolatedServer {
 	private void testColumnType(String sqlType, String sqlValue, Object expectedNormalJsonValue, Object expectedBootstrappedJsonValue) throws Exception {
 		String input[] = {
 			"DROP TABLE IF EXISTS shard_1.column_test",
-			String.format("CREATE TABLE IF NOT EXISTS shard_1.column_test (id int unsigned auto_increment NOT NULL primary key, col %s)", sqlType),
+			String.format("CREATE TABLE IF NOT EXISTS shard_1.column_test (col %s)", sqlType),
 			String.format("INSERT INTO shard_1.column_test SET col = %s", sqlValue),
 			"INSERT INTO maxwell.bootstrap set database_name = 'shard_1', table_name = 'column_test'"
 		};
@@ -219,7 +240,7 @@ public class BootstrapIntegrationTest extends MaxwellTestWithIsolatedServer {
 				output = decrypted;
 			}
 
-			if ( output.get("table").equals("column_test") && output.get("type").equals("insert") ) {
+			if ( output.get("table").equals("column_test") && output.get("type").toString().contains("insert") ) {
 				Map<String, Object> dataSource = encryptionMode == EncryptionMode.ENCRYPT_DATA ? decrypted : output;
 				Map<String, Object> data = (Map<String, Object>) dataSource.get("data");
 				if ( !foundNormalRow ) {

@@ -157,10 +157,15 @@ public class DDLParserTest {
 	@Test
 	public void testParsingSomeAlters() {
 		String testSQL[] = {
+			"alter table t add column mortgage_item BIT(4) NOT NULL DEFAULT 0b0000",
+			"alter table t add column mortgage_item BIT(4) NOT NULL DEFAULT 'b'01010",
+			"alter table t add column mortgage_item BIT(4) NOT NULL DEFAULT 'B'01010",
 			"alter database d DEFAULT CHARACTER SET = 'utf8'",
 			"alter database d UPGRADE DATA DIRECTORY NAME",
 			"alter schema d COLLATE foo",
 			"alter table t add index `foo` using btree (`a`, `cd`) key_block_size=123",
+			"alter table t add index `foo` using btree (`a`, `cd`) invisible key_block_size=123",
+			"alter table t add index `foo` using btree (`a`, `cd`) comment 'hello' key_block_size=12",
 			"alter table t add key bar (d)",
 			"alter table t add constraint `foo` primary key using btree (id)",
 			"alter table t add primary key (`id`)",
@@ -178,6 +183,8 @@ public class DDLParserTest {
 			"alter table t alter column `foo` SET DEFAULT false",
 			"alter table t alter column `foo` SET DEFAULT -1",
 			"alter table t alter column `foo` drop default",
+			"alter table t alter index `foo` VISIBLE",
+			"alter table t alter index bar INVISIBLE",
 			"alter table t CHARACTER SET latin1 COLLATE = 'utf8'",
 			"ALTER TABLE `test` ENGINE=`InnoDB` CHARACTER SET latin1",
 			"alter table t DROP PRIMARY KEY",
@@ -192,6 +199,7 @@ public class DDLParserTest {
 			"alter table t add column `foo` int, auto_increment = 5 engine=innodb, modify column bar int",
 			"alter table t add column `foo` int,  ALGORITHM=copy",
 			"alter table t add column `foo` int, algorithm copy",
+			"alter table t add column `foo` int, algorithm instant",
 			"alter table t add column `foo` int, algorithm copy, lock shared",
 			"alter table t add column `foo` int, algorithm copy, lock=exclusive",
 			"create table t (id int) engine=memory",
@@ -238,7 +246,11 @@ public class DDLParserTest {
 			"DROP TEMPORARY TABLE IF EXISTS 172898_16841_transmem",
 			"ALTER TEMPORARY TABLE 172898_16841_transmem ADD something VARCHAR(1)",
 			"/* hi bob */ CREATE EVENT FOO",
-			"DELETE FROM `foo`.`bar`"
+			"DELETE FROM `foo`.`bar`",
+			"CREATE ROLE 'administrator', 'developer'",
+			"SET ROLE 'role1', 'role2'",
+			"SET DEFAULT ROLE administrator, developer TO 'joe'@'10.0.0.1'",
+			"DROP ROLE 'role1'"
 		};
 
 		for ( String s : testSQL ) {

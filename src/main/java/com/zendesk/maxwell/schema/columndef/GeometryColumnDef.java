@@ -1,6 +1,5 @@
 package com.zendesk.maxwell.schema.columndef;
 
-import com.google.code.or.common.util.MySQLConstants;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKBReader;
@@ -11,13 +10,8 @@ import java.util.Arrays;
  * Created by ben on 12/30/15.
  */
 public class GeometryColumnDef extends ColumnDef {
-	public GeometryColumnDef(String name, String type, int pos) {
+	public GeometryColumnDef(String name, String type, short pos) {
 		super(name, type, pos);
-	}
-
-	@Override
-	public boolean matchesMysqlType(int type) {
-		return type == MySQLConstants.TYPE_GEOMETRY;
 	}
 
 	@Override

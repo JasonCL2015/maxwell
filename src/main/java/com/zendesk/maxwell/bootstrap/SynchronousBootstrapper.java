@@ -10,6 +10,8 @@ import com.zendesk.maxwell.schema.Database;
 import com.zendesk.maxwell.schema.Schema;
 import com.zendesk.maxwell.schema.Table;
 import com.zendesk.maxwell.schema.columndef.ColumnDef;
+import com.zendesk.maxwell.schema.columndef.TimeColumnDef;
+import com.zendesk.maxwell.scripting.Scripting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +53,7 @@ public class SynchronousBootstrapper extends AbstractBootstrapper {
 		Database database = findDatabase(schema, databaseName);
 		Table table = findTable(tableName, database);
 
+		Long schemaId = replicator.getSchemaId();
 		Position position = startBootstrapRow.getPosition();
 		producer.push(startBootstrapRow);
 		producer.push(bootstrapStartRowMap(table, position));
@@ -64,6 +67,11 @@ public class SynchronousBootstrapper extends AbstractBootstrapper {
 			while ( resultSet.next() ) {
 				RowMap row = bootstrapEventRowMap("bootstrap-insert", table, position);
 				setRowValues(row, resultSet, table);
+				row.setSchemaId(schemaId);
+
+				Scripting scripting = context.getConfig().scripting;
+				if ( scripting != null )
+					scripting.invoke(row);
 
 				if ( LOGGER.isDebugEnabled() )
 					LOGGER.debug("bootstrapping row : " + row.toJSON());
@@ -145,8 +153,11 @@ public class SynchronousBootstrapper extends AbstractBootstrapper {
 			// This update resets all rows of incomplete bootstraps to their original state.
 			// These updates are treated as fresh bootstrap requests and trigger a restart
 			// of the bootstrap process from the beginning.
-			String sql = "update `bootstrap` set started_at = NULL where is_complete = 0 and started_at is not NULL";
-			connection.prepareStatement(sql).execute();
+			String clientID = this.context.getConfig().clientID;
+			String sql = "update `bootstrap` set started_at = NULL where is_complete = 0 and started_at is not NULL and client_id = ?";
+			PreparedStatement s = connection.prepareStatement(sql);
+			s.setString(1, clientID);
+			s.execute();
 		}
 	}
 
@@ -234,7 +245,13 @@ public class SynchronousBootstrapper extends AbstractBootstrapper {
 		int columnIndex = 1;
 		while ( columnDefinitions.hasNext() ) {
 			ColumnDef columnDefinition = columnDefinitions.next();
-			Object columnValue = resultSet.getObject(columnIndex);
+			Object columnValue;
+
+			// need to explicitly coerce TIME into TIMESTAMP in order to preserve nanoseconds
+			if ( columnDefinition instanceof TimeColumnDef )
+				columnValue = resultSet.getTimestamp(columnIndex);
+			else
+				columnValue = resultSet.getObject(columnIndex);
 
 			row.putData(
 				columnDefinition.getName(),

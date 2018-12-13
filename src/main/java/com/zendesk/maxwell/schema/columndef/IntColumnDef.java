@@ -1,14 +1,11 @@
 package com.zendesk.maxwell.schema.columndef;
 
-import com.google.code.or.common.util.MySQLConstants;
-
-
 public class IntColumnDef extends ColumnDef {
 	public int bits;
 
 	protected boolean signed;
 
-	public IntColumnDef(String name, String type, int pos, boolean signed) {
+	public IntColumnDef(String name, String type, short pos, boolean signed) {
 		super(name, type, pos);
 		this.signed = signed;
 		this.bits = bitsFromType(type);
@@ -49,22 +46,6 @@ public class IntColumnDef extends ColumnDef {
 	@Override
 	public Object asJSON(Object value) {
 		return toLong(value);
-	}
-
-	@Override
-	public boolean matchesMysqlType(int type) {
-		switch(this.bits) {
-		case 8:
-			return type == MySQLConstants.TYPE_TINY;
-		case 16:
-			return type == MySQLConstants.TYPE_SHORT;
-		case 24:
-			return type == MySQLConstants.TYPE_INT24;
-		case 32:
-			return type == MySQLConstants.TYPE_LONG;
-		default:
-			return false;
-		}
 	}
 
 	private final static int bitsFromType(String type) {

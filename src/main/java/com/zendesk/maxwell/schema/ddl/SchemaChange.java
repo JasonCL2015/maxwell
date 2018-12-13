@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import com.zendesk.maxwell.MaxwellFilter;
+import com.zendesk.maxwell.filtering.Filter;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -22,27 +22,28 @@ public abstract class SchemaChange {
 	private static final Set<Pattern> SQL_BLACKLIST = new HashSet<Pattern>();
 
 	static {
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*BEGIN", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*COMMIT", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*FLUSH", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*GRANT", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*REVOKE\\s+", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*SAVEPOINT", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*BEGIN", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*COMMIT", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*FLUSH", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*GRANT", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*REVOKE\\s+", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*SAVEPOINT", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
 
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*CREATE\\s+(AGGREGATE)?\\s+FUNCTION", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*(ALTER|CREATE)\\s+(DEFINER=[^\\s]+\\s+)?(EVENT|FUNCTION|TRIGGER|PROCEDURE)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*DROP\\s+(EVENT|FUNCTION|TRIGGER|PROCEDURE|VIEW)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*CREATE\\s+(AGGREGATE)?\\s+FUNCTION", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*(ALTER|CREATE)\\s+(DEFINER=[^\\s]+\\s+)?(EVENT|FUNCTION|TRIGGER|PROCEDURE)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*DROP\\s+(EVENT|FUNCTION|TRIGGER|PROCEDURE|VIEW)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
 
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*(ALTER|CREATE|DROP)\\s+((ONLINE|OFFLINE|UNIQUE|FULLTEXT|SPATIAL)\\s+)*(INDEX)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*ANALYZE\\s+TABLE", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*SET\\s+PASSWORD", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*(ALTER|CREATE|DROP|RENAME)\\s+USER", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*(ALTER|CREATE|DROP)\\s+((ONLINE|OFFLINE|UNIQUE|FULLTEXT|SPATIAL)\\s+)*(INDEX)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*ANALYZE\\s+TABLE", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*SET\\s+PASSWORD", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*(ALTER|CREATE|DROP|RENAME)\\s+USER", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
 
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*(ALTER|CREATE|DROP)\\s+TEMPORARY\\s+TABLE", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*TRUNCATE\\s+", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*OPTIMIZE\\s+", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*(ALTER|CREATE|DROP)\\s+TEMPORARY\\s+TABLE", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*(SET|DROP|CREATE)\\s+(DEFAULT\\s+)?ROLE", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*TRUNCATE\\s+", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*OPTIMIZE\\s+", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
 
-		SQL_BLACKLIST.add(Pattern.compile("^\\s*REPAIR\\s+", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
+		SQL_BLACKLIST.add(Pattern.compile("\\A\\s*REPAIR\\s+", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE));
 	}
 
 	private static final Pattern DELETE_BLACKLIST = Pattern.compile("^\\s*DELETE\\s*FROM", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
@@ -113,5 +114,5 @@ public abstract class SchemaChange {
 		}
 	}
 
-	public abstract boolean isBlacklisted(MaxwellFilter filter);
+	public abstract boolean isBlacklisted(Filter filter);
 }

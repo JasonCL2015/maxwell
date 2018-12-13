@@ -6,7 +6,6 @@ import java.nio.charset.UnsupportedCharsetException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 
-import com.google.code.or.common.util.MySQLConstants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +13,7 @@ import org.slf4j.LoggerFactory;
 public class StringColumnDef extends ColumnDef {
 	public String charset;
 
-	static final Logger LOGGER = LoggerFactory.getLogger(StringColumnDef.class);
-	public StringColumnDef(String name, String type, int pos, String charset) {
+	public StringColumnDef(String name, String type, short pos, String charset) {
 		super(name, type, pos);
 		this.charset = charset;
 	}
@@ -31,13 +29,6 @@ public class StringColumnDef extends ColumnDef {
 	public void setDefaultCharset(String e) {
 		if ( this.charset == null )
 		  this.charset = e;
-	}
-
-	@Override
-	public boolean matchesMysqlType(int type) {
-		return type == MySQLConstants.TYPE_BLOB ||
-			   type == MySQLConstants.TYPE_VARCHAR ||
-			   type == MySQLConstants.TYPE_STRING;
 	}
 
 	@Override
